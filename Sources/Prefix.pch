@@ -1,0 +1,18 @@
+
+
+// Resource
+#define kAssetBundle @"Contents/Resources"
+
+#import "Macro.h"
+
+#ifdef __OBJC__
+#import <Cocoa/Cocoa.h>
+#import "NSUtil.h"
+#endif
+
+// Cydia 自动部署安装
+// 回读 WIFI BT 型号
+// 自动注入进程
+
+// open /Applications/Xcode.app/Contents/Resources/Packages/MobileDevice.pkg
+// sudo ln -s /System/Library/PrivateFrameworks/MobileDevice.framework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/PrivateFrameworks/
