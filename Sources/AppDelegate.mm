@@ -58,25 +58,64 @@
 		activityIndicator.hidden = NO;
 		[activityIndicator startAnimation:nil];
 		
-		[self performSelectorInBackground:@selector(deploying:)  withObject:nil];
+		NSIndexSet *indexes = _tableView.selectedRowIndexes;
+		if (indexes.count == 0)
+		{
+			indexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, _caches.count)];
+		}
+		[self performSelectorInBackground:@selector(exporting:)  withObject:indexes];
 	}
 }
 
 //
-- (void)deploying:(NSDictionary *)spark
+- (void)exporting:(NSIndexSet *)indexes
 {
 	@autoreleasepool
 	{
 		NSString *result = nil;
 		
-		//for ()
+		AMDevice *device = AMDevice.anyone;
+		if (device == nil)
+		{
+			result = @"设备不再连接";
+		}
+		else
+		{
+			NSFileManager *fileManager = [NSFileManager defaultManager];
+			AFCApplicationDirectory *dir = [device newAFCApplicationDirectory:@"net.yonsm.Armor"];
+			[indexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
+				NSString *path = [@"Documents" stringByAppendingPathComponent:_caches[idx][@"VideoId"]];
+				NSArray *items = [dir directoryContents:path];
+				if (items.count)
+				{
+					for (NSString *item in items)
+					{
+						if ([item hasSuffix:@".flv"] || [item hasSuffix:@".mp4"])
+						{
+							NSString *remote = [path stringByAppendingPathComponent:item];
+							NSString *local = [NSString stringWithFormat:@"/tmp/%@/%@", _caches[idx][@"Title"] ?: @"未知剧集", _caches[idx][@"Subtitle"] ?: _caches[idx][@"VideoId"]];
+							BOOL isDir = NO;
+							if (![fileManager fileExistsAtPath:local isDirectory:&isDir])
+							{
+								isDir = [fileManager createDirectoryAtPath:local withIntermediateDirectories:YES attributes:nil error:nil];
+							}
+							if (isDir)
+							{
+								local = [local stringByAppendingPathComponent:item];
+								[dir copyYouKuFile:remote toLocalFile:local];
+							}
+						}
+					}
+				}
+			}];
+		}
 		
 		[self performSelectorOnMainThread:@selector(deployed:) withObject:result waitUntilDone:YES];
 	}
 }
 
 //
-- (void)deployed:(NSString *)result
+- (void)exported:(NSString *)result
 {
 	[activityIndicator stopAnimation:nil];
 	activityIndicator.hidden = YES;

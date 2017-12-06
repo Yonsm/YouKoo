@@ -6,3 +6,7 @@
 + (AMDevice *)anyone;
 
 @end
+
+@interface AFCDirectoryAccess (Helper)
+- (BOOL)copyYouKuFile:(NSString*)path1 toLocalFile:(NSString*)path2;
+@end
