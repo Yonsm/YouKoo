@@ -15,6 +15,7 @@
 		247A05041AA1BA4000A103B1 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 24AF72C91A345DCD000801CE /* MainMenu.xib */; };
 		24BCB02B1ED6C84D00900866 /* DeviceHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 24BCB0291ED6C84D00900866 /* DeviceHelper.m */; };
 		24CCA9121FD7C2FF0089C5E5 /* Icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 24F3B6EF17018BF9001DEA15 /* Icon.icns */; };
+		24CCA9141FD7EFDB0089C5E5 /* ffmpeg in Resources */ = {isa = PBXBuildFile; fileRef = 24CCA9131FD7EFDB0089C5E5 /* ffmpeg */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 		24AF72C91A345DCD000801CE /* MainMenu.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		24BCB0291ED6C84D00900866 /* DeviceHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeviceHelper.m; sourceTree = "<group>"; };
 		24BCB02A1ED6C84D00900866 /* DeviceHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeviceHelper.h; sourceTree = "<group>"; };
+		24CCA9131FD7EFDB0089C5E5 /* ffmpeg */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = ffmpeg; sourceTree = "<group>"; };
 		24F3B6EF17018BF9001DEA15 /* Icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Icon.icns; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -80,6 +82,7 @@
 		2447BD0A14C9830000A34F0F /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				24CCA9131FD7EFDB0089C5E5 /* ffmpeg */,
 				2447BD1114C9830000A34F0F /* Info.plist */,
 				24F3B6EF17018BF9001DEA15 /* Icon.icns */,
 				24AF72C91A345DCD000801CE /* MainMenu.xib */,
@@ -166,6 +169,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				247A05041AA1BA4000A103B1 /* MainMenu.xib in Resources */,
+				24CCA9141FD7EFDB0089C5E5 /* ffmpeg in Resources */,
 				24CCA9121FD7C2FF0089C5E5 /* Icon.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -82,29 +82,69 @@
 		else
 		{
 			NSFileManager *fileManager = [NSFileManager defaultManager];
+			NSString *ffmpeg = NSAssetSubPath(@"ffmpeg");
+
 			AFCApplicationDirectory *dir = [device newAFCApplicationDirectory:@"net.yonsm.Armor"];
 			[indexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
 				NSString *path = [@"Documents" stringByAppendingPathComponent:_caches[idx][@"VideoId"]];
-				NSArray *items = [dir directoryContents:path];
+				NSArray *items = [[dir directoryContents:path] sortedArrayUsingComparator:^NSComparisonResult(NSString *obj1, NSString *obj2) {
+					int i1 = [obj1 intValue];
+					int i2 = [obj2 intValue];
+					return (i1 == i2) ? NSOrderedSame : ((i1 < i2) ? NSOrderedAscending : NSOrderedDescending);
+				}];
 				if (items.count)
 				{
+					NSMutableString *concats = [NSMutableString string];
+					NSString *localDir = [NSString stringWithFormat:@"/tmp/%@/%@", _caches[idx][@"Title"] ?: @"未知剧集", _caches[idx][@"Subtitle"] ?: _caches[idx][@"VideoId"]];
 					for (NSString *item in items)
 					{
 						if ([item hasSuffix:@".flv"] || [item hasSuffix:@".mp4"])
 						{
 							NSString *remote = [path stringByAppendingPathComponent:item];
-							NSString *local = [NSString stringWithFormat:@"/tmp/%@/%@", _caches[idx][@"Title"] ?: @"未知剧集", _caches[idx][@"Subtitle"] ?: _caches[idx][@"VideoId"]];
 							BOOL isDir = NO;
-							if (![fileManager fileExistsAtPath:local isDirectory:&isDir])
+							if (![fileManager fileExistsAtPath:localDir isDirectory:&isDir])
 							{
-								isDir = [fileManager createDirectoryAtPath:local withIntermediateDirectories:YES attributes:nil error:nil];
+								isDir = [fileManager createDirectoryAtPath:localDir withIntermediateDirectories:YES attributes:nil error:nil];
 							}
 							if (isDir)
 							{
-								local = [local stringByAppendingPathComponent:item];
-								[dir copyYouKuFile:remote toLocalFile:local];
+								NSString *local = [localDir stringByAppendingPathComponent:item];
+								if (![fileManager fileExistsAtPath:local])
+								{
+									[dir copyYouKuFile:remote toLocalFile:local];
+								
+								}
+
+#if 0
+								NSArray *arguments = @[@"-n", @"-i", item, @"-vcodec", @"copy", @"-acodec", @"copy", @"-vbsf", @"h264_mp4toannexb", [item stringByAppendingPathExtension:@"ts"]];
+								NSString *result = [self doTask:ffmpeg arguments:arguments currentDirectory:localDir];
+								if (hasItems == NO)
+								{
+									hasItems = YES;
+								}
+								else
+								{
+									[concats appendString:@"|"];
+								}
+								[concats appendString:item];
+#else
+								[concats appendFormat:@"file %@\n", item];
+#endif
 							}
 						}
+					}
+
+					if (concats.length)
+					{
+						NSString *videoList = [localDir stringByAppendingPathComponent:@"VideoList.txt"];
+						[concats writeToFile:videoList atomically:NO];
+						
+						NSString *outFile = [localDir stringByAppendingPathExtension:@"mp4"];
+						
+//						NSArray *arguments = @[@"-n", @"-i", concats, @"-acodec", @"copy", @"-vcodec", @"copy", @"-absf", @"aac_adtstoasc", outFile];
+	//					NSString *result = [self doTask:ffmpeg arguments:arguments currentDirectory:localDir];
+						NSArray *arguments = @[@"-f", @"concat", @"-i", @"VideoList.txt", @"-c", @"copy", outFile];
+						NSString *result = [self doTask:ffmpeg arguments:arguments currentDirectory:localDir];
 					}
 				}
 			}];
@@ -120,7 +160,30 @@
 	[activityIndicator stopAnimation:nil];
 	activityIndicator.hidden = YES;
 	
-	NSInteger ret = NSRunAlertPanel(@"提示", @"%@", @"确定", @"重启设备", nil, result ? result : @"已经部署到设备上。\n\n您需要重新启动设备才能生效。", nil);
+	NSRunAlertPanel(@"提示", result ? result : @"已经完成。", @"确定", nil, nil, nil);
+}
+
+//
+- (NSString *)doTask:(NSString *)path arguments:(NSArray *)arguments currentDirectory:(NSString *)currentDirectory
+{
+	NSTask *task = [[NSTask alloc] init];
+	task.launchPath = path;
+	task.arguments = arguments;
+	if (currentDirectory) task.currentDirectoryPath = currentDirectory;
+	
+	NSPipe *pipe = [NSPipe pipe];
+	task.standardOutput = pipe;
+	task.standardError = pipe;
+	
+	NSFileHandle *file = [pipe fileHandleForReading];
+	
+	[task launch];
+	
+	NSData *data = [file readDataToEndOfFile];
+	NSString *result = data.length ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : nil;
+	
+	//NSLog(@"CMD:\n%@\n%@ARG\n\n%@\n\n", path, arguments, (result ? result : @""));
+	return result;
 }
 
 #pragma mark -
