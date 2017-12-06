@@ -110,7 +110,7 @@
 			}];
 		}
 		
-		[self performSelectorOnMainThread:@selector(deployed:) withObject:result waitUntilDone:YES];
+		[self performSelectorOnMainThread:@selector(exported:) withObject:result waitUntilDone:YES];
 	}
 }
 
@@ -214,51 +214,14 @@
 			for (NSDictionary *cache in caches)
 			{
 				NSString *videoId = cache[@"VideoId"];
-				if (_metas[videoId])
+				if (_metas[videoId] == nil)
 				{
-					//[self performSelectorOnMainThread:@selector(loadMeta:) withObject:videoId waitUntilDone:YES];
-					continue;
-				}
-
-				NSString *url = [NSString stringWithFormat:@"https://v.youku.com/v_show/id_%@", videoId];
-				NSURL *URL = [NSURL URLWithString:url];
-				NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL];
-				[request setValue:@"http://www.youku.com/" forHTTPHeaderField:@"Referer"];
-				[request setValue:@"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36" forHTTPHeaderField:@"User-Agent"];
-				NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
-				if (data)
-				{
-					NSString *html = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-					NSString *subtitleSpan = @"<span id=\"subtitle\" title=\"";
-					NSRange start = [html rangeOfString:subtitleSpan];
-					if (start.location != NSNotFound)
+					NSDictionary *meta = [self downloadMeta:videoId];
+					if (meta)
 					{
-						NSInteger location = start.location + subtitleSpan.length;
-						NSRange end = [html rangeOfString:@"\"" options:0 range:NSMakeRange(location, html.length - location)];
-						if (end.location != NSNotFound)
-						{
-							NSString *subtitle = [html substringWithRange:NSMakeRange(location, end.location - location)];
-							NSLog(@"%@",subtitle);
-							
-							NSRange end = [html rangeOfString:@"</span>：" options:NSBackwardsSearch range:NSMakeRange(0, location)];
-							if (end.location != NSNotFound)
-							{
-								NSString *titleSpan = @"<span>";
-								NSRange start = [html rangeOfString:titleSpan options:NSBackwardsSearch range:NSMakeRange(0, end.location)];
-								if (start.location != NSNotFound)
-								{
-									NSInteger location = start.location + titleSpan.length;
-									NSString *title = [html substringWithRange:NSMakeRange(location, end.location - location)];
-									NSLog(@"%@",title);
-									
-									NSDictionary *meta = @{@"Subtitle": subtitle ?: @"",
-														   @"Title": title ?: @""};
-									_metas[videoId] = meta;
-									dirty = YES;
-									[self performSelectorOnMainThread:@selector(loadMeta:) withObject:videoId waitUntilDone:YES];
-								}
-							}
-						}
+						dirty = YES;
+						_metas[videoId] = meta;
+						[self performSelectorOnMainThread:@selector(loadMeta:) withObject:videoId waitUntilDone:YES];
 					}
 				}
 			}
@@ -270,6 +233,60 @@
 			}
 		}
 	}
+}
+
+//
+- (NSDictionary *)downloadMeta:(NSString *)videoId
+{
+	NSString *url = [NSString stringWithFormat:@"https://v.youku.com/v_show/id_%@", videoId];
+	NSURL *URL = [NSURL URLWithString:url];
+	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL];
+	[request setValue:@"http://www.youku.com/" forHTTPHeaderField:@"Referer"];
+	[request setValue:@"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36" forHTTPHeaderField:@"User-Agent"];
+	NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
+	if (data == nil)
+	{
+		return nil;
+	}
+	
+	NSString *html = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+	NSString *subtitleSpan = @"<span id=\"subtitle\" title=\"";
+	NSRange start = [html rangeOfString:subtitleSpan];
+	if (start.location == NSNotFound)
+	{
+		return nil;
+	}
+	
+	NSInteger location = start.location + subtitleSpan.length;
+	NSRange end = [html rangeOfString:@"\"" options:0 range:NSMakeRange(location, html.length - location)];
+	if (end.location == NSNotFound)
+	{
+		return nil;
+	}
+	
+	NSString *subtitle = [html substringWithRange:NSMakeRange(location, end.location - location)];
+	if (subtitle.length == 0)
+	{
+		return nil;
+	}
+
+	NSString *title = nil;
+	end = [html rangeOfString:@"</span>：" options:NSBackwardsSearch range:NSMakeRange(0, location)];
+	if (end.location != NSNotFound)
+	{
+		NSString *titleSpan = @"<span>";
+		start = [html rangeOfString:titleSpan options:NSBackwardsSearch range:NSMakeRange(0, end.location)];
+		if (start.location != NSNotFound)
+		{
+			NSInteger location = start.location + titleSpan.length;
+			title = [html substringWithRange:NSMakeRange(location, end.location - location)];
+		}
+	}
+	
+	return @{
+			 @"Subtitle": subtitle,
+			 @"Title": title ?: @""
+			 };
 }
 
 //
