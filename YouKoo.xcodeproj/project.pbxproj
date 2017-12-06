@@ -14,6 +14,7 @@
 		2460CF081A0B83CE0023CB69 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2447BCE714C9824400A34F0F /* Cocoa.framework */; };
 		247A05041AA1BA4000A103B1 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 24AF72C91A345DCD000801CE /* MainMenu.xib */; };
 		24BCB02B1ED6C84D00900866 /* DeviceHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 24BCB0291ED6C84D00900866 /* DeviceHelper.m */; };
+		24CCA9121FD7C2FF0089C5E5 /* Icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 24F3B6EF17018BF9001DEA15 /* Icon.icns */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -165,6 +166,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				247A05041AA1BA4000A103B1 /* MainMenu.xib in Resources */,
+				24CCA9121FD7C2FF0089C5E5 /* Icon.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
