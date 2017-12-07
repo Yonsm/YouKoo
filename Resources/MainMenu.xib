@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="13529" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="13771" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13529"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13771"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -148,6 +148,7 @@
                 </menuItem>
                 <menuItem title="Window" id="19"/>
             </items>
+            <point key="canvasLocation" x="-21" y="107"/>
         </menu>
         <window title="YouKoo" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="371">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
@@ -157,17 +158,6 @@
                 <rect key="frame" x="0.0" y="0.0" width="653" height="471"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <button verticalHuggingPriority="750" misplaced="YES" id="3229">
-                        <rect key="frame" x="472" y="11" width="161" height="66"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="smallSquare" title="📲 " bezelStyle="smallSquare" alignment="center" enabled="NO" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="3230">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" size="16" name=".AppleColorEmojiUI"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="deploy:" target="494" id="3407"/>
-                        </connections>
-                    </button>
                     <scrollView misplaced="YES" autohidesScrollers="YES" horizontalLineScroll="26" horizontalPageScroll="10" verticalLineScroll="26" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="75F-OR-pjq">
                         <rect key="frame" x="-1" y="99" width="655" height="373"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -183,7 +173,7 @@
                                     <tableViewGridLines key="gridStyleMask" vertical="YES" dashed="YES"/>
                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                     <tableColumns>
-                                        <tableColumn identifier="VideoId" editable="NO" width="180" minWidth="40" maxWidth="300" id="LzU-UB-F2s">
+                                        <tableColumn identifier="VideoId" editable="NO" width="170" minWidth="80" maxWidth="300" id="LzU-UB-F2s">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="center" title="标识">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -196,7 +186,7 @@
                                             </textFieldCell>
                                             <tableColumnResizingMask key="resizingMask" userResizable="YES"/>
                                         </tableColumn>
-                                        <tableColumn identifier="VideoCount" editable="NO" width="40" minWidth="40" maxWidth="100" id="WGB-KN-Bh2">
+                                        <tableColumn identifier="SegmentsCount" editable="NO" width="40" minWidth="40" maxWidth="100" id="WGB-KN-Bh2">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="center" title="分段">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -209,7 +199,7 @@
                                             </textFieldCell>
                                             <tableColumnResizingMask key="resizingMask" userResizable="YES"/>
                                         </tableColumn>
-                                        <tableColumn identifier="Subtitle" editable="NO" width="180" minWidth="100" maxWidth="1000" id="gr5-Xy-dnv">
+                                        <tableColumn identifier="Subtitle" editable="NO" width="220" minWidth="100" maxWidth="1000" id="gr5-Xy-dnv">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="center" title="名称">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -222,7 +212,7 @@
                                             </textFieldCell>
                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                         </tableColumn>
-                                        <tableColumn identifier="Title" editable="NO" width="180" minWidth="100" maxWidth="1000" id="Dhb-xt-tAJ">
+                                        <tableColumn identifier="Title" editable="NO" width="200" minWidth="100" maxWidth="1000" id="Dhb-xt-tAJ">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="center" title="剧集">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -256,30 +246,93 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </tableHeaderView>
                     </scrollView>
-                    <progressIndicator hidden="YES" wantsLayer="YES" misplaced="YES" maxValue="100" indeterminate="YES" style="spinning" id="59a-rs-Ns9">
-                        <rect key="frame" x="408" y="28" width="32" height="32"/>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" id="kdV-yB-MlB">
+                        <rect key="frame" x="18" y="57" width="71" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="输出目录：" id="caN-o7-s4T">
+                            <font key="font" size="13" name=".PingFangSC-Regular"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" misplaced="YES" id="yRm-FJ-F3M">
+                        <rect key="frame" x="85" y="54" width="305" height="22"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="M6M-aB-37M">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <button verticalHuggingPriority="750" misplaced="YES" id="nZ2-tG-bwE">
+                        <rect key="frame" x="392" y="48" width="39" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="push" title="..." bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="x0g-De-ToM">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="browseOutput:" target="494" id="Yy3-Ct-Mvz"/>
+                        </connections>
+                    </button>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" id="a75-58-HTu">
+                        <rect key="frame" x="18" y="27" width="71" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="临时目录：" id="1Zg-hr-hjd">
+                            <font key="font" size="13" name=".PingFangSC-Regular"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" misplaced="YES" id="B35-K4-HIB">
+                        <rect key="frame" x="85" y="24" width="305" height="22"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="Zey-IS-X9A">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <button verticalHuggingPriority="750" misplaced="YES" id="UWp-ua-kxr">
+                        <rect key="frame" x="392" y="18" width="39" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="push" title="..." bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="YPK-mS-kzH">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="browseTemp:" target="494" id="muo-sb-yme"/>
+                        </connections>
+                    </button>
+                    <progressIndicator hidden="YES" wantsLayer="YES" misplaced="YES" maxValue="100" displayedWhenStopped="NO" style="spinning" id="5Qg-tn-E1U">
+                        <rect key="frame" x="456" y="33" width="32" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     </progressIndicator>
+                    <button verticalHuggingPriority="750" misplaced="YES" id="3229">
+                        <rect key="frame" x="496" y="16" width="137" height="66"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="smallSquare" title="📱请连接设备" bezelStyle="smallSquare" alignment="center" enabled="NO" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="3230">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system" size="16"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="exportMedia:" target="494" id="3407"/>
+                        </connections>
+                    </button>
                 </subviews>
             </view>
             <point key="canvasLocation" x="40.5" y="424.5"/>
         </window>
         <customObject id="494" customClass="AppDelegate">
             <connections>
+                <outlet property="_exportButton" destination="3229" id="3414"/>
+                <outlet property="_outputField" destination="yRm-FJ-F3M" id="2Mp-so-Bql"/>
+                <outlet property="_progressIndicator" destination="5Qg-tn-E1U" id="Lrj-Dy-xgX"/>
                 <outlet property="_tableView" destination="i9H-cp-QPX" id="PId-nW-tXH"/>
-                <outlet property="activityIndicator" destination="59a-rs-Ns9" id="5e2-hi-afi"/>
-                <outlet property="deployButton" destination="3229" id="3414"/>
+                <outlet property="_tempField" destination="yRm-FJ-F3M" id="Bew-UU-58r"/>
                 <outlet property="window" destination="371" id="2789"/>
             </connections>
         </customObject>
         <customObject id="420" customClass="NSFontManager"/>
-        <button verticalHuggingPriority="750" id="VmO-e5-EvZ">
-            <rect key="frame" x="0.0" y="0.0" width="39" height="38"/>
-            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-            <buttonCell key="cell" type="round" title="🔎" bezelStyle="circular" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Hdd-ze-3R7">
-                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                <font key="font" metaFont="miniSystem"/>
-            </buttonCell>
-        </button>
     </objects>
 </document>
