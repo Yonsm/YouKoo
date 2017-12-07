@@ -6,15 +6,16 @@
 
 - (instancetype)initWithDevice:(AMDevice *)device;
 - (void)loadCaches:(void (^)(NSUInteger current, NSUInteger total))progress;
-- (NSString *)exportMedia:(NSIndexSet *)indexes;
-- (void)openDetailPage:(NSUInteger)row;
+- (NSString *)exportCaches:(NSIndexSet *)indexes progress:(void (^)(NSUInteger current, NSUInteger total))progress;
+- (void)showPage:(NSUInteger)index;
 
-@property(strong,nonatomic) AMDevice *device;
-@property(strong,nonatomic) NSMutableArray *caches;
+@property (strong, nonatomic) AMDevice *device;
+@property (strong, nonatomic) NSMutableArray *caches;
+@property (assign, nonatomic) BOOL exportingCancelled;
 
 @end
 
 //
 @interface AFCDirectoryAccess (Helper)
-- (BOOL)copyYouKuFile:(NSString*)path1 toLocalFile:(NSString*)path2;
+- (BOOL)copyYouKooFile:(NSString*)path1 toLocalFile:(NSString*)path2;
 @end

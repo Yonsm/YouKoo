@@ -26,25 +26,22 @@
 	documents = [documents sortedArrayUsingSelector:@selector(compare:)];
 	_caches = [NSMutableArray arrayWithCapacity:documents.count];
 
-	
-	NSUInteger total = documents.count;
-	NSUInteger current = 0;
-	progress(current, total);
-
-	for (NSString *videoId in documents)
+	//
+	NSMutableDictionary *videos = [NSMutableDictionary dictionaryWithCapacity:documents.count];
+	for (NSString *document in documents)
 	{
 		// Check potential valid
-		if (videoId.length != 17)
+		if (document.length != 17)
 		{
 			continue;
 		}
-		NSString *path = [@"Documents" stringByAppendingPathComponent:videoId];
-//		NSDictionary *info = [dir getFileInfo:path];
-//		if (![info[@"st_ifmt"] isEqualToString:@"S_IFDIR"])
-//		{
-//			continue;
-//		}
-
+		NSString *path = [@"Documents" stringByAppendingPathComponent:document];
+		//		NSDictionary *info = [dir getFileInfo:path];
+		//		if (![info[@"st_ifmt"] isEqualToString:@"S_IFDIR"])
+		//		{
+		//			continue;
+		//		}
+		
 		// Check video count
 		NSArray *segments = [dir directoryContents:path];
 		NSUInteger segmentsCount = 0;
@@ -55,15 +52,20 @@
 				segmentsCount++;
 			}
 		}
-		if (segmentsCount == 0)
+		if (segmentsCount)
 		{
-			continue;
+			videos[document] = [NSString stringWithFormat:@"%ld", segmentsCount];
 		}
-
-		//
+	}
+	
+	//
+	NSUInteger total = videos.count;
+	NSUInteger current = 0;
+	for (NSString *videoId in videos.allKeys)
+	{
 		NSMutableDictionary *cache = [NSMutableDictionary dictionary];
 		cache[@"VideoId"] = videoId;
-		cache[@"SegmentsCount"] = [NSString stringWithFormat:@"%ld", segmentsCount];
+		cache[@"SegmentsCount"] = videos[videoId];
 
 		NSDictionary *meta = oldMetas[videoId];
 		if (meta == nil)
@@ -78,7 +80,7 @@
 
 		[_caches addObject:cache];
 		
-		[NSThread sleepForTimeInterval:1];
+		//[NSThread sleepForTimeInterval:0.5];
 		progress(++current, total);
 	}
 
@@ -87,8 +89,6 @@
 	{
 		[newMetas writeToFile:metasPath atomically:YES];
 	}
-
-	progress(total, total);
 }
 
 //
@@ -146,63 +146,87 @@
 }
 
 //
-- (NSString *)exportMedia:(NSIndexSet *)indexes
+- (NSString *)exportCaches:(NSIndexSet *)indexes progress:(void (^)(NSUInteger current, NSUInteger total))progress
 {
 	__block NSString *result = nil;
-	
-	NSFileManager *fileManager = [NSFileManager defaultManager];
-	NSString *ffmpeg = NSAssetSubPath(@"ffmpeg");
-
 	AFCApplicationDirectory *dir = [_device newAFCApplicationDirectory:@"net.yonsm.Armor"];
-	[indexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
-		NSString *path = [@"Documents" stringByAppendingPathComponent:_caches[idx][@"VideoId"]];
-		NSArray *segments = [[dir directoryContents:path] sortedArrayUsingComparator:^NSComparisonResult(NSString *obj1, NSString *obj2) {
-			int i1 = [obj1 intValue];
-			int i2 = [obj2 intValue];
-			return (i1 == i2) ? NSOrderedSame : ((i1 < i2) ? NSOrderedAscending : NSOrderedDescending);
-		}];
-		if (segments.count)
+	[indexes enumerateIndexesUsingBlock:^(NSUInteger index, BOOL *stop) {
+		NSString *ret = [self exportCache:_caches[index] dir:dir];
+		if (ret)
 		{
-			NSMutableString *concats = [NSMutableString string];
-			NSString *localDir = [NSString stringWithFormat:@"/tmp/%@/%@", _caches[idx][@"Title"] ?: @"未知剧集", _caches[idx][@"Subtitle"] ?: _caches[idx][@"VideoId"]];
-			for (NSString *segment in segments)
-			{
-				if ([segment hasSuffix:@".flv"] || [segment hasSuffix:@".mp4"])
-				{
-					NSString *remote = [path stringByAppendingPathComponent:segment];
-					BOOL isDir = NO;
-					if (![fileManager fileExistsAtPath:localDir isDirectory:&isDir])
-					{
-						isDir = [fileManager createDirectoryAtPath:localDir withIntermediateDirectories:YES attributes:nil error:nil];
-					}
-					if (isDir)
-					{
-						NSString *local = [localDir stringByAppendingPathComponent:segment];
-						if (![fileManager fileExistsAtPath:local])
-						{
-							[dir copyYouKuFile:remote toLocalFile:local];
-							
-						}
-						[concats appendFormat:@"file %@\n", segment];
-					}
-				}
-			}
-			
-			if (concats.length)
-			{
-				NSString *videoList = [localDir stringByAppendingPathComponent:@"VideoList.txt"];
-				[concats writeToFile:videoList atomically:NO encoding:NSUTF8StringEncoding error:nil];
-				
-				NSString *outFile = [localDir stringByAppendingPathExtension:@"mp4"];
-				
-				//						NSArray *arguments = @[@"-n", @"-i", concats, @"-acodec", @"copy", @"-vcodec", @"copy", @"-absf", @"aac_adtstoasc", outFile];
-				//					NSString *result = [self runTask:ffmpeg arguments:arguments currentDirectory:localDir];
-				NSArray *arguments = @[@"-f", @"concat", @"-i", @"VideoList.txt", @"-c", @"copy", outFile];
-				result = [self runTask:ffmpeg arguments:arguments currentDirectory:localDir];
-			}
+			result = [NSString stringWithFormat:@"%@。\n\n视频：%@", ret, _caches[index][@"Subtitle"] ?: _caches[index][@"VideoId"]];
+			*stop = YES;
+		}
+		else
+		{
+			progress(index, indexes.count);
 		}
 	}];
+	return result;
+}
+
+//
+- (NSString *)exportCache:(NSDictionary *)cache dir:(AFCDirectoryAccess *)dir
+{
+	NSString *path = [@"Documents" stringByAppendingPathComponent:cache[@"VideoId"]];
+	NSArray *segments = [[dir directoryContents:path] sortedArrayUsingComparator:^NSComparisonResult(NSString *obj1, NSString *obj2) {
+		int i1 = [obj1 intValue];
+		int i2 = [obj2 intValue];
+		return (i1 == i2) ? NSOrderedSame : ((i1 < i2) ? NSOrderedAscending : NSOrderedDescending);
+	}];
+
+	NSFileManager *fileManager = [NSFileManager defaultManager];
+	NSMutableString *concats = [NSMutableString string];
+	NSString *localDir = [NSString stringWithFormat:@"/tmp/%@/%@", cache[@"Title"], cache[@"Subtitle"] ?: cache[@"VideoId"]];
+	for (NSString *segment in segments)
+	{
+		if ([segment hasSuffix:@".flv"] || [segment hasSuffix:@".mp4"])
+		{
+			NSString *remote = [path stringByAppendingPathComponent:segment];
+			BOOL isDir = NO;
+			if (![fileManager fileExistsAtPath:localDir isDirectory:&isDir])
+			{
+				isDir = [fileManager createDirectoryAtPath:localDir withIntermediateDirectories:YES attributes:nil error:nil];
+			}
+			if (!isDir)
+			{
+				return @"创建临时目录失败";
+			}
+
+			[concats appendFormat:@"file %@\n", segment];
+
+			NSString *local = [localDir stringByAppendingPathComponent:segment];
+			if ([fileManager fileExistsAtPath:local])
+			{
+				// Check file size
+				if (1)
+				{
+					//delete
+					continue;
+				}
+				[fileManager removeItemAtPath:local error:nil];
+			}
+			
+			if (![dir copyYouKooFile:remote toLocalFile:local])
+			{
+				return @"导出文件失败";
+			}
+		}
+	}
+
+	if (concats.length == 0)
+	{
+		return @"未找到视频片段";
+	}
+
+	NSString *videoList = [localDir stringByAppendingPathComponent:@"VideoList.txt"];
+	[concats writeToFile:videoList atomically:NO encoding:NSUTF8StringEncoding error:nil];
 	
+	NSString *ffmpeg = NSAssetSubPath(@"ffmpeg");
+	NSString *outFile = [localDir stringByAppendingPathExtension:@"mp4"];
+	NSArray *arguments = @[@"-f", @"concat", @"-i", @"VideoList.txt", @"-c", @"copy", outFile];
+	NSString *result = [self runTask:ffmpeg arguments:arguments currentDirectory:localDir];
+// TODO
 	return result;
 }
 
@@ -230,11 +254,11 @@
 }
 
 //
-- (void)openDetailPage:(NSUInteger)row
+- (void)showPage:(NSUInteger)index
 {
-	if (row != -1)
+	if (index < _caches.count)
 	{
-		NSString *videoId = _caches[row][@"VideoId"];
+		NSString *videoId = _caches[index][@"VideoId"];
 		NSString *url = [NSString stringWithFormat:@"https://v.youku.com/v_show/id_%@", videoId];
 		[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:url]];
 	}
@@ -245,7 +269,7 @@
 @implementation AFCDirectoryAccess (Helper)
 
 //
-- (BOOL)copyYouKuFile:(NSString*)path1 toLocalFile:(NSString*)path2
+- (BOOL)copyYouKooFile:(NSString*)path1 toLocalFile:(NSString*)path2
 {
 	BOOL result = NO;
 	AFCFileReference *in = [self openForRead:path1];

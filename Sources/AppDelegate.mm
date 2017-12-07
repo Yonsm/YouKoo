@@ -13,10 +13,10 @@
 - (void)applicationWillFinishLaunching:(NSNotification *)aNotification
 {
 	window.title = [NSString stringWithFormat:@"%@ - %@", NSBundleName(), NSBundleVersion()];
-
+	
 	_tableView.target = self;
 	_tableView.doubleAction = @selector(doubleClick:);
-
+	
 	//
 	MobileDeviceAccess.singleton.listener = self;
 }
@@ -53,7 +53,7 @@
 {
 	if (_youkoo.caches.count == 0)
 		return;
-
+	
 	_sortAscending = !_sortAscending;
 	[_youkoo.caches sortUsingComparator:^NSComparisonResult(NSDictionary *obj1, NSDictionary *obj2) {
 		if (_sortAscending)
@@ -79,7 +79,7 @@
 //
 - (void)doubleClick:(id)object
 {
-	[_youkoo openDetailPage:_tableView.clickedRow];
+	[_youkoo showPage:_tableView.clickedRow];
 }
 
 #pragma mark -
@@ -96,40 +96,37 @@
 }
 
 //
-- (IBAction)exportMedia:(id)sender
+- (IBAction)exportCaches:(id)sender
 {
-	if (_progressIndicator.isHidden != NO)
+	if (_state == StateReady)
 	{
-		_progressIndicator.hidden = NO;
-		//[_progressIndicator setCurrent]
-		[_progressIndicator startAnimation:nil];
-		
+		self.state = StateExporting;
+		_progressIndicator.doubleValue = 0;
+		_progressIndicator.toolTip = nil;
+		_youkoo.exportingCancelled = NO;
+
 		NSIndexSet *indexes = _tableView.selectedRowIndexes;
 		if (indexes.count == 0)
 		{
 			indexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, _youkoo.caches.count)];
 		}
-		[self performSelectorInBackground:@selector(exportWorker:)  withObject:indexes];
+		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+			NSString *result = [_youkoo exportCaches:indexes progress:^(NSUInteger current, NSUInteger total) {
+				dispatch_sync(dispatch_get_main_queue(), ^{
+					_progressIndicator.doubleValue = current * 100 / total;
+					_progressIndicator.toolTip = [NSString stringWithFormat:@"%lu/%lu", current, total];
+				});
+			}];
+			dispatch_sync(dispatch_get_main_queue(), ^{
+				self.state = StateReady;
+				NSRunAlertPanel(@"完成", result ?: @"已全部导出成功。", nil, nil, nil);
+			});
+		});
 	}
-}
-
-//
-- (void)exportWorker:(NSIndexSet *)indexes
-{
-	@autoreleasepool
+	else if (_state == StateExporting)
 	{
-		NSString *result = [_youkoo exportMedia:indexes];
-		[self performSelectorOnMainThread:@selector(exportEnded:) withObject:result waitUntilDone:YES];
+		_youkoo.exportingCancelled = YES;
 	}
-}
-
-//
-- (void)exportEnded:(NSString *)result
-{
-	[_progressIndicator stopAnimation:nil];
-	_progressIndicator.hidden = YES;
-	
-	NSRunAlertPanel(@"提示", result ? result : @"已经完成。", @"确定", nil, nil, nil);
 }
 
 #pragma mark -
@@ -140,25 +137,22 @@
 {
 	if (_state == StateDisconnected)
 	{
-		_youkoo.device = nil;
-		_youkoo = [[YouKooHelper alloc] initWithDevice:device];
-		[_tableView reloadData];
-
 		self.state = StateLoading;
 		_progressIndicator.doubleValue = 0;
-
+		_progressIndicator.toolTip = nil;
+		
+		_youkoo = [[YouKooHelper alloc] initWithDevice:device];
+		[_tableView reloadData];
+		
 		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 			[_youkoo loadCaches:^(NSUInteger current, NSUInteger total) {
 				dispatch_sync(dispatch_get_main_queue(), ^{
 					_progressIndicator.doubleValue = current * 100 / total;
 					_progressIndicator.toolTip = [NSString stringWithFormat:@"%lu/%lu", current, total];
 					[_tableView reloadData];
-					if (current == total)
-					{
-						self.state = StateReady;
-					}
 				});
 			}];
+			dispatch_sync(dispatch_get_main_queue(), ^{self.state = StateReady;});
 		});
 	}
 }
@@ -168,7 +162,6 @@
 {
 	if (device == _youkoo.device)
 	{
-		_youkoo.device = nil;
 		_youkoo = nil;
 		self.state = StateDisconnected;
 		[_tableView reloadData];
@@ -179,10 +172,10 @@
 - (void)setState:(AppState)state
 {
 	_state = state;
-
-	_exportButton.enabled = (state != StateDisconnected);
+	
+	_exportButton.enabled = (state == StateReady) || (state == StateExporting);
 	_progressIndicator.hidden = (state == StateDisconnected) || (state == StateReady);
-
+	
 	switch (state)
 	{
 		default:
