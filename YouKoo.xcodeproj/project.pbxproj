@@ -9,13 +9,13 @@
 /* Begin PBXBuildFile section */
 		2402197F16036E40008AE6BB /* MobileDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2402197E16036E40008AE6BB /* MobileDevice.framework */; };
 		243C55AF1A0F6977000A1E94 /* Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 243C55AE1A0F6977000A1E94 /* Main.m */; };
-		2460CEE91A0B6D920023CB69 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2460CEDA1A0B6D920023CB69 /* AppDelegate.mm */; };
 		2460CEFB1A0B7F760023CB69 /* MobileDeviceAccess.m in Sources */ = {isa = PBXBuildFile; fileRef = 2460CEFA1A0B7F760023CB69 /* MobileDeviceAccess.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		2460CF081A0B83CE0023CB69 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2447BCE714C9824400A34F0F /* Cocoa.framework */; };
 		247A05041AA1BA4000A103B1 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 24AF72C91A345DCD000801CE /* MainMenu.xib */; };
 		24BCB02B1ED6C84D00900866 /* YouKooHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 24BCB0291ED6C84D00900866 /* YouKooHelper.m */; };
 		24CCA9121FD7C2FF0089C5E5 /* Icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 24F3B6EF17018BF9001DEA15 /* Icon.icns */; };
 		24CCA9141FD7EFDB0089C5E5 /* ffmpeg in Resources */ = {isa = PBXBuildFile; fileRef = 24CCA9131FD7EFDB0089C5E5 /* ffmpeg */; };
+		24FF6E921FDA7AC00076F3E7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 24FF6E911FDA7AC00076F3E7 /* AppDelegate.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,7 +25,6 @@
 		2447BCE714C9824400A34F0F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		2447BD1114C9830000A34F0F /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2460CED91A0B6D920023CB69 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		2460CEDA1A0B6D920023CB69 /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
 		2460CEE81A0B6D920023CB69 /* Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Prefix.pch; sourceTree = "<group>"; };
 		2460CEF91A0B7F760023CB69 /* MobileDeviceAccess.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MobileDeviceAccess.h; sourceTree = "<group>"; };
 		2460CEFA1A0B7F760023CB69 /* MobileDeviceAccess.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MobileDeviceAccess.m; sourceTree = "<group>"; };
@@ -36,6 +35,7 @@
 		24BCB02A1ED6C84D00900866 /* YouKooHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YouKooHelper.h; sourceTree = "<group>"; };
 		24CCA9131FD7EFDB0089C5E5 /* ffmpeg */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = ffmpeg; sourceTree = "<group>"; };
 		24F3B6EF17018BF9001DEA15 /* Icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Icon.icns; sourceTree = "<group>"; };
+		24FF6E911FDA7AC00076F3E7 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,10 +95,10 @@
 			children = (
 				243C55AE1A0F6977000A1E94 /* Main.m */,
 				2460CEE81A0B6D920023CB69 /* Prefix.pch */,
+				2460CED91A0B6D920023CB69 /* AppDelegate.h */,
+				24FF6E911FDA7AC00076F3E7 /* AppDelegate.m */,
 				24BCB02A1ED6C84D00900866 /* YouKooHelper.h */,
 				24BCB0291ED6C84D00900866 /* YouKooHelper.m */,
-				2460CED91A0B6D920023CB69 /* AppDelegate.h */,
-				2460CEDA1A0B6D920023CB69 /* AppDelegate.mm */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -212,7 +212,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2460CEE91A0B6D920023CB69 /* AppDelegate.mm in Sources */,
+				24FF6E921FDA7AC00076F3E7 /* AppDelegate.m in Sources */,
 				243C55AF1A0F6977000A1E94 /* Main.m in Sources */,
 				2460CEFB1A0B7F760023CB69 /* MobileDeviceAccess.m in Sources */,
 				24BCB02B1ED6C84D00900866 /* YouKooHelper.m in Sources */,
