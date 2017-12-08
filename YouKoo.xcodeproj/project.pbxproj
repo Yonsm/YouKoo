@@ -268,7 +268,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = Resources/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = YouKoo;
 				SDKROOT = macosx;
@@ -319,7 +319,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = Resources/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = YouKoo;
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "../Bomb/** ../Camo/**";
@@ -331,7 +331,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.${PRODUCT_NAME}";
+				PRODUCT_BUNDLE_IDENTIFIER = net.yonsm.YouKoo;
 				PRODUCT_NAME = YouKoo;
 			};
 			name = Debug;
@@ -340,7 +340,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.${PRODUCT_NAME}";
+				PRODUCT_BUNDLE_IDENTIFIER = net.yonsm.YouKoo;
 				PRODUCT_NAME = YouKoo;
 			};
 			name = Release;

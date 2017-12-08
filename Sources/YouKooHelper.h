@@ -6,7 +6,7 @@
 
 - (instancetype)initWithDevice:(AMDevice *)device;
 - (void)loadCaches:(void (^)(NSUInteger current, NSUInteger total))progress;
-- (NSString *)exportCaches:(NSIndexSet *)indexes progress:(void (^)(NSUInteger current, NSUInteger total))progress;
+- (NSString *)exportCaches:(NSIndexSet *)indexes outDir:(NSString *)outDir tmpDir:(NSString *)tmpDir progress:(void (^)(NSUInteger current, NSUInteger total))progress;
 - (void)showPage:(NSUInteger)index;
 
 @property (strong, nonatomic) AMDevice *device;

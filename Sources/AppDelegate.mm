@@ -18,6 +18,21 @@
 	_tableView.doubleAction = @selector(doubleClick:);
 	
 	//
+	NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
+	NSString *outDir = [preferences stringForKey:@"OutDir"];
+	if (outDir.length == 0)
+	{
+		outDir = [NSUserDirectoryPath(NSMoviesDirectory) stringByAppendingPathComponent:@"YouKoo"];
+	}
+	NSString *tmpDir = [preferences stringForKey:@"TmpDir"];
+	if (tmpDir.length == 0)
+	{
+		tmpDir = [NSTemporaryDirectory() stringByAppendingPathComponent:@"YouKoo"];
+	}
+	_outField.stringValue = outDir;
+	_tmpField.stringValue = tmpDir;
+
+	//
 	MobileDeviceAccess.singleton.listener = self;
 }
 
@@ -29,6 +44,10 @@
 //
 - (void)applicationWillTerminate:(NSNotification *)notification
 {
+	NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
+	[preferences setValue:_outField.stringValue forKey:@"OutDir"];
+	[preferences setValue:_tmpField.stringValue forKey:@"TmpDir"];
+	[preferences synchronize];
 }
 
 #pragma mark -
@@ -86,13 +105,22 @@
 #pragma mark Control methods
 
 //
-- (IBAction)browseOutput:(id)sender
+- (IBAction)browseDir:(id)sender
 {
-}
-
-//
-- (IBAction)browseTemp:(id)sender
-{
+	NSTextField *field = (sender == _browseOutButton) ? _outField : _tmpField;
+	
+	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
+	openPanel.directoryURL = [NSURL fileURLWithPath:field.stringValue];
+	openPanel.canChooseFiles = NO;
+	openPanel.canChooseDirectories = YES;
+	if ([openPanel runModal] == NSModalResponseOK)
+	{
+		field.stringValue = openPanel.URLs[0].path;
+		
+		NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
+		[preferences setValue:field.stringValue forKey:(sender == _browseOutButton) ? @"OutDir" : @"TmpDir"];
+		[preferences synchronize];
+	}
 }
 
 //
@@ -110,8 +138,11 @@
 		{
 			indexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, _youkoo.caches.count)];
 		}
+		NSString *outDir = _outField.stringValue;
+		NSString *tmpDir = _tmpField.stringValue;
+
 		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-			NSString *result = [_youkoo exportCaches:indexes progress:^(NSUInteger current, NSUInteger total) {
+			NSString *result = [_youkoo exportCaches:indexes outDir:outDir tmpDir:tmpDir progress:^(NSUInteger current, NSUInteger total) {
 				dispatch_sync(dispatch_get_main_queue(), ^{
 					_progressIndicator.doubleValue = current * 100 / total;
 					_progressIndicator.toolTip = [NSString stringWithFormat:@"%lu/%lu", current, total];
@@ -119,7 +150,7 @@
 			}];
 			dispatch_sync(dispatch_get_main_queue(), ^{
 				self.state = StateReady;
-				NSRunAlertPanel(@"完成", result ?: @"已全部导出成功。", nil, nil, nil);
+				NSRunAlertPanel(@"完成", @"%@", nil, nil, nil, result ?: @"已全部导出成功。", nil);
 			});
 		});
 	}
@@ -173,6 +204,8 @@
 {
 	_state = state;
 	
+	_browseOutButton.enabled = (state == StateDisconnected) || (state == StateReady);
+	_browseOutButton.enabled = (state == StateDisconnected) || (state == StateReady);
 	_exportButton.enabled = (state == StateReady) || (state == StateExporting);
 	_progressIndicator.hidden = (state == StateDisconnected) || (state == StateReady);
 	

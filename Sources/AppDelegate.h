@@ -8,8 +8,10 @@
 {
 	IBOutlet NSTableView *_tableView;
 	IBOutlet NSButton *_exportButton;
-	IBOutlet NSTextField *_outputField;
-	IBOutlet NSTextField *_tempField;
+	IBOutlet NSTextField *_outField;
+	IBOutlet NSTextField *_tmpField;
+	IBOutlet NSButton *_browseOutButton;
+	IBOutlet NSButton *_browseTmpButton;
 	IBOutlet NSProgressIndicator *_progressIndicator;
 
 	BOOL _sortAscending;

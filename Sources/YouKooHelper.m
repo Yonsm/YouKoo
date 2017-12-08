@@ -2,6 +2,21 @@
 
 #import "YouKooHelper.h"
 
+@implementation NSFileManager (Helper)
+
+//
+- (BOOL)ensureDirectoryExists:(NSString *)dir
+{
+	BOOL isDir = NO;
+	if ([self fileExistsAtPath:dir isDirectory:&isDir])
+	{
+		return isDir;
+	}
+	return [self createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
+}
+@end
+
+
 @implementation YouKooHelper
 
 //
@@ -16,13 +31,13 @@
 - (void)loadCaches:(void (^)(NSUInteger current, NSUInteger total))progress
 {
 	// Load meta info
-	NSString *metasPath = NSCacheSubPath(@"YouKooMetas.plist");
-	NSDictionary *oldMetas = [NSDictionary dictionaryWithContentsOfFile:metasPath];
-	NSMutableDictionary *newMetas = [NSMutableDictionary dictionary];
+	NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
+	NSDictionary *metas = [preferences objectForKey:@"Metas"];
+	NSMutableDictionary *validMetas = [NSMutableDictionary dictionary];
 
 	// Load caches
-	AFCApplicationDirectory *dir = [_device newAFCApplicationDirectory:@"net.yonsm.Armor"];
-	NSArray *documents = [dir directoryContents:@"Documents"];
+	AFCApplicationDirectory *afcDir = [_device newAFCApplicationDirectory:@"net.yonsm.Armor"];
+	NSArray *documents = [afcDir directoryContents:@"Documents"];
 	documents = [documents sortedArrayUsingSelector:@selector(compare:)];
 	_caches = [NSMutableArray arrayWithCapacity:documents.count];
 
@@ -36,14 +51,14 @@
 			continue;
 		}
 		NSString *path = [@"Documents" stringByAppendingPathComponent:document];
-		//		NSDictionary *info = [dir getFileInfo:path];
+		//		NSDictionary *info = [afcDir getFileInfo:path];
 		//		if (![info[@"st_ifmt"] isEqualToString:@"S_IFDIR"])
 		//		{
 		//			continue;
 		//		}
 		
 		// Check video count
-		NSArray *segments = [dir directoryContents:path];
+		NSArray *segments = [afcDir directoryContents:path];
 		NSUInteger segmentsCount = 0;
 		for (NSString *segment in segments)
 		{
@@ -67,32 +82,51 @@
 		cache[@"VideoId"] = videoId;
 		cache[@"SegmentsCount"] = videos[videoId];
 
-		NSDictionary *meta = oldMetas[videoId];
-		if (meta == nil)
+		//
+		if ([self lookupMeta:videoId metas:metas cache:cache])
 		{
-			meta = [self downloadMeta:videoId];
-		}
-		if (meta)
-		{
-			newMetas[videoId] = meta;
-			[cache addEntriesFromDictionary:meta];
+			NSMutableDictionary *meta = validMetas[cache[@"Title"]];
+			if (meta == nil)
+			{
+				meta = [NSMutableDictionary dictionary];
+				validMetas[cache[@"Title"]] = meta;
+			}
+			meta[videoId] = cache[@"Subtitle"];
 		}
 
 		[_caches addObject:cache];
-		
-		//[NSThread sleepForTimeInterval:0.5];
 		progress(++current, total);
 	}
 
 	// Overwrite metas
-	if (newMetas.count && ![oldMetas isEqualToDictionary:newMetas])
+	if (validMetas.count && ![metas isEqualToDictionary:validMetas])
 	{
-		[newMetas writeToFile:metasPath atomically:YES];
+		[preferences setObject:validMetas forKey:@"Metas"];
+		[preferences synchronize];
 	}
 }
 
 //
-- (NSDictionary *)downloadMeta:(NSString *)videoId
+- (BOOL)lookupMeta:(NSString *)videoId metas:(NSDictionary *)metas cache:(NSMutableDictionary *)cache
+{
+	for (NSString *title in metas.allKeys)
+	{
+		NSDictionary *meta = metas[title];
+		for (NSString *metaId in meta.allKeys)
+		{
+			if ([videoId isEqualToString:metaId])
+			{
+				cache[@"Title"] = title;
+				cache[@"Subtitle"] = meta[metaId];
+				return YES;
+			}
+		}
+	}
+	return [self downloadMeta:videoId cache:cache];
+}
+
+//
+- (BOOL)downloadMeta:(NSString *)videoId cache:(NSMutableDictionary *)cache
 {
 	NSString *url = [NSString stringWithFormat:@"https://v.youku.com/v_show/id_%@", videoId];
 	NSURL *URL = [NSURL URLWithString:url];
@@ -102,7 +136,7 @@
 	NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
 	if (data == nil)
 	{
-		return nil;
+		return NO;
 	}
 	
 	NSString *html = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
@@ -110,20 +144,20 @@
 	NSRange start = [html rangeOfString:subtitleSpan];
 	if (start.location == NSNotFound)
 	{
-		return nil;
+		return NO;
 	}
 	
 	NSInteger location = start.location + subtitleSpan.length;
 	NSRange end = [html rangeOfString:@"\"" options:0 range:NSMakeRange(location, html.length - location)];
 	if (end.location == NSNotFound)
 	{
-		return nil;
+		return NO;
 	}
 	
 	NSString *subtitle = [html substringWithRange:NSMakeRange(location, end.location - location)];
 	if (subtitle.length == 0)
 	{
-		return nil;
+		return NO;
 	}
 	
 	NSString *title = nil;
@@ -138,20 +172,23 @@
 			title = [html substringWithRange:NSMakeRange(location, end.location - location)];
 		}
 	}
-	
-	return @{
-			 @"Subtitle": subtitle,
-			 @"Title": title ?: @"未知剧集"
-			 };
+
+	cache[@"Subtitle"] = subtitle;
+	cache[@"Title"] = title ?: @"未知剧集";
+	return YES;
 }
 
 //
-- (NSString *)exportCaches:(NSIndexSet *)indexes progress:(void (^)(NSUInteger current, NSUInteger total))progress
+- (NSString *)exportCaches:(NSIndexSet *)indexes outDir:(NSString *)outDir tmpDir:(NSString *)tmpDir progress:(void (^)(NSUInteger current, NSUInteger total))progress
 {
 	__block NSString *result = nil;
-	AFCApplicationDirectory *dir = [_device newAFCApplicationDirectory:@"net.yonsm.Armor"];
+
+	NSString *ffmpeg = NSAssetSubPath(@"ffmpeg");
+	NSFileManager *fileManager = [NSFileManager defaultManager];
+	AFCApplicationDirectory *afcDir = [_device newAFCApplicationDirectory:@"net.yonsm.Armor"];
+	
 	[indexes enumerateIndexesUsingBlock:^(NSUInteger index, BOOL *stop) {
-		NSString *ret = [self exportCache:_caches[index] dir:dir];
+		NSString *ret = [self exportCache:_caches[index] afcDir:afcDir outDir:outDir tmpDir:tmpDir ffmpeg:ffmpeg fileManager:fileManager];
 		if (ret)
 		{
 			result = [NSString stringWithFormat:@"%@。\n\n视频：%@", ret, _caches[index][@"Subtitle"] ?: _caches[index][@"VideoId"]];
@@ -166,48 +203,69 @@
 }
 
 //
-- (NSString *)exportCache:(NSDictionary *)cache dir:(AFCDirectoryAccess *)dir
+- (NSString *)exportCache:(NSDictionary *)cache
+				   afcDir:(AFCDirectoryAccess *)afcDir
+				   outDir:(NSString *)outDir
+				   tmpDir:(NSString *)tmpDir
+				   ffmpeg:(NSString *)ffmpeg
+			  fileManager:(NSFileManager *)fileManager
 {
+	if (_exportingCancelled)
+	{
+		return @"已取消";
+	}
+
+	// Check output file exists
+	NSString *subPath = [NSString stringWithFormat:@"%@/%@", cache[@"Title"] ?: @"未知剧集", cache[@"Subtitle"] ?: cache[@"VideoId"]];
+	NSString *outFile = [NSString stringWithFormat:@"%@/%@.mp4", outDir, subPath];
+	if ([fileManager fileExistsAtPath:outFile])
+	{
+		return nil;
+	}
+	// Lookup remote video segments
 	NSString *path = [@"Documents" stringByAppendingPathComponent:cache[@"VideoId"]];
-	NSArray *segments = [[dir directoryContents:path] sortedArrayUsingComparator:^NSComparisonResult(NSString *obj1, NSString *obj2) {
+	NSArray *segments = [[afcDir directoryContents:path] sortedArrayUsingComparator:^NSComparisonResult(NSString *obj1, NSString *obj2) {
 		int i1 = [obj1 intValue];
 		int i2 = [obj2 intValue];
 		return (i1 == i2) ? NSOrderedSame : ((i1 < i2) ? NSOrderedAscending : NSOrderedDescending);
 	}];
 
-	NSFileManager *fileManager = [NSFileManager defaultManager];
+	// Prepare local working directory
+	NSString *localDir = [tmpDir stringByAppendingPathComponent:subPath];
+	if (![fileManager ensureDirectoryExists:localDir])
+	{
+		return @"创建临时目录失败";
+	}
+
+	// Export video segments
 	NSMutableString *concats = [NSMutableString string];
-	NSString *localDir = [NSString stringWithFormat:@"/tmp/%@/%@", cache[@"Title"], cache[@"Subtitle"] ?: cache[@"VideoId"]];
 	for (NSString *segment in segments)
 	{
 		if ([segment hasSuffix:@".flv"] || [segment hasSuffix:@".mp4"])
 		{
-			NSString *remote = [path stringByAppendingPathComponent:segment];
-			BOOL isDir = NO;
-			if (![fileManager fileExistsAtPath:localDir isDirectory:&isDir])
-			{
-				isDir = [fileManager createDirectoryAtPath:localDir withIntermediateDirectories:YES attributes:nil error:nil];
-			}
-			if (!isDir)
-			{
-				return @"创建临时目录失败";
-			}
-
 			[concats appendFormat:@"file %@\n", segment];
 
+			NSString *remote = [path stringByAppendingPathComponent:segment];
 			NSString *local = [localDir stringByAppendingPathComponent:segment];
 			if ([fileManager fileExistsAtPath:local])
 			{
 				// Check file size
-				if (1)
+				NSDictionary *localInfo = [fileManager attributesOfItemAtPath:local error:nil];
+				NSDictionary *remoteInfo = [afcDir getFileInfo:remote];
+				long long localSize = [localInfo[@"localInfo"] longLongValue];
+				long long remoteSize = [remoteInfo[@"st_size"] longLongValue];
+				if ((localSize == remoteSize) || (localSize + 34/*magic header*/ == remoteSize))
 				{
-					//delete
 					continue;
 				}
 				[fileManager removeItemAtPath:local error:nil];
 			}
 			
-			if (![dir copyYouKooFile:remote toLocalFile:local])
+			if (_exportingCancelled)
+			{
+				return @"已取消";
+			}
+			if (![afcDir copyYouKooFile:remote toLocalFile:local])
 			{
 				return @"导出文件失败";
 			}
@@ -219,15 +277,32 @@
 		return @"未找到视频片段";
 	}
 
+	// Prepare output directory
+	if (![fileManager ensureDirectoryExists:outFile.stringByDeletingLastPathComponent])
+	{
+		return @"创建输出目录失败";
+	}
+
+	// Create video list file
 	NSString *videoList = [localDir stringByAppendingPathComponent:@"VideoList.txt"];
 	[concats writeToFile:videoList atomically:NO encoding:NSUTF8StringEncoding error:nil];
-	
-	NSString *ffmpeg = NSAssetSubPath(@"ffmpeg");
-	NSString *outFile = [localDir stringByAppendingPathExtension:@"mp4"];
+
+	// Perform vidoe segments merging
 	NSArray *arguments = @[@"-f", @"concat", @"-i", @"VideoList.txt", @"-c", @"copy", outFile];
+
+	if (_exportingCancelled)
+	{
+		return @"已取消";
+	}
 	NSString *result = [self runTask:ffmpeg arguments:arguments currentDirectory:localDir];
-// TODO
-	return result;
+
+	// TODO
+	if (0)
+	{
+		[fileManager removeItemAtPath:localDir error:nil];
+	}
+
+	return nil;
 }
 
 //
