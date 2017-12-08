@@ -31,6 +31,14 @@
 	}
 	_outField.stringValue = outDir;
 	_tmpField.stringValue = tmpDir;
+	
+	//
+	NSClickGestureRecognizer *outClick = [[NSClickGestureRecognizer alloc] initWithTarget:self action:@selector(dirFieldClicked:)];
+	outClick.numberOfClicksRequired = 2;
+	NSClickGestureRecognizer *tmpClick = [[NSClickGestureRecognizer alloc] initWithTarget:self action:@selector(dirFieldClicked:)];
+	tmpClick.numberOfClicksRequired = 2;
+	[_outField addGestureRecognizer:outClick];
+	[_tmpField addGestureRecognizer:tmpClick];
 
 	//
 	MobileDeviceAccess.singleton.listener = self;
@@ -105,6 +113,12 @@
 #pragma mark Control methods
 
 //
+- (void)dirFieldClicked:(NSClickGestureRecognizer *)sender
+{
+	[[NSWorkspace sharedWorkspace] selectFile:nil inFileViewerRootedAtPath:[(NSTextField *)sender.view stringValue]];
+}
+
+//
 - (IBAction)browseDir:(id)sender
 {
 	NSTextField *field = (sender == _browseOutButton) ? _outField : _tmpField;
@@ -150,7 +164,10 @@
 			}];
 			dispatch_sync(dispatch_get_main_queue(), ^{
 				self.state = StateReady;
-				NSRunAlertPanel(@"完成", @"%@", nil, nil, nil, result ?: @"已全部导出成功。", nil);
+				NSAlert *alert = [[NSAlert alloc] init];
+				alert.messageText = result ? @"未完成" : @"完成";
+				alert.informativeText = result ?: [NSString stringWithFormat:@"已成功导出 %lu 项", indexes.count];
+				[alert runModal];
 			});
 		});
 	}
@@ -204,11 +221,12 @@
 {
 	_state = state;
 	
-	_browseOutButton.enabled = (state == StateDisconnected) || (state == StateReady);
-	_browseOutButton.enabled = (state == StateDisconnected) || (state == StateReady);
+	BOOL idle = (state == StateDisconnected) || (state == StateReady);
+	_progressIndicator.hidden = idle;
+	_browseOutButton.enabled = idle;
+	_browseTmpButton.enabled = idle;
 	_exportButton.enabled = (state == StateReady) || (state == StateExporting);
-	_progressIndicator.hidden = (state == StateDisconnected) || (state == StateReady);
-	
+
 	switch (state)
 	{
 		default:
