@@ -309,12 +309,12 @@
 	}
 	
 	// Check output file exists
-	NSString *subPath = [NSString stringWithFormat:@"%@/%@", cache[@"Title"] ?: @"未知剧集", cache[@"Subtitle"] ?: cache[@"VideoId"]];
-	NSString *outFile = [NSString stringWithFormat:@"%@/%@.mp4", outDir, subPath];
+	NSString *outFile = [NSString stringWithFormat:@"%@/%@/%@.mp4", outDir, cache[@"Title"] ?: @"未知剧集", cache[@"Subtitle"] ?: cache[@"VideoId"]];
 	if ([fileManager fileExistsAtPath:outFile])
 	{
 		return nil;
 	}
+
 	// Lookup remote video segments
 	NSString *remoteDir = [@"Documents" stringByAppendingPathComponent:cache[@"VideoId"]];
 	NSArray *segments = [[afcDir directoryContents:remoteDir] sortedArrayUsingComparator:^NSComparisonResult(NSString *obj1, NSString *obj2) {
@@ -324,7 +324,7 @@
 	}];
 	
 	// Prepare local working directory
-	NSString *localDir = [tmpDir stringByAppendingPathComponent:subPath];
+	NSString *localDir = [tmpDir stringByAppendingPathComponent:cache[@"Subtitle"] ?: cache[@"VideoId"]];
 	if (![fileManager ensureDirectoryExists:localDir])
 	{
 		return @"创建临时目录失败";
