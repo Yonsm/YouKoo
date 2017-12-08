@@ -6,7 +6,7 @@
 
 - (instancetype)initWithDevice:(AMDevice *)device;
 - (void)loadCaches:(void (^)(NSUInteger current, NSUInteger total))progress;
-- (NSString *)exportCaches:(NSIndexSet *)indexes outDir:(NSString *)outDir tmpDir:(NSString *)tmpDir progress:(void (^)(NSUInteger current, NSUInteger total))progress;
+- (NSString *)exportCaches:(NSIndexSet *)indexes outDir:(NSString *)outDir tmpDir:(NSString *)tmpDir progress:(void (^)(NSUInteger current, NSUInteger total))progress progress2:(void (^)(NSUInteger current, NSUInteger total))progress2;
 - (void)showPage:(NSUInteger)index;
 
 @property (strong, nonatomic) AMDevice *device;
@@ -15,7 +15,3 @@
 
 @end
 
-//
-@interface AFCDirectoryAccess (Helper)
-- (BOOL)copyYouKooFile:(NSString*)path1 toLocalFile:(NSString*)path2;
-@end

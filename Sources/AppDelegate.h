@@ -13,6 +13,7 @@
 	IBOutlet NSButton *_browseOutButton;
 	IBOutlet NSButton *_browseTmpButton;
 	IBOutlet NSProgressIndicator *_progressIndicator;
+	IBOutlet NSProgressIndicator *_progressIndicator2;
 
 	BOOL _sortAscending;
 	YouKooHelper *_youkoo;

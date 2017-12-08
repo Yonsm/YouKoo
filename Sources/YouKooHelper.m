@@ -47,6 +47,59 @@
 @end
 
 
+@implementation AFCDirectoryAccess (Helper)
+
+//
+- (BOOL)copyYouKooFile:(NSString*)path1 toLocalFile:(NSString*)path2
+{
+	BOOL result = NO;
+	AFCFileReference *in = [self openForRead:path1];
+	if (in)
+	{
+		[NSFileManager.defaultManager createFileAtPath:path2 contents:nil attributes:nil];
+		NSFileHandle *out = [NSFileHandle fileHandleForWritingAtPath:path2];
+		if (out)
+		{
+			const long bufsz = 10240;
+			char *buff = malloc(bufsz);
+			
+			// Check YouKu header & skip it
+			struct {UInt16 magic; UInt16 size;} header;
+			uint32_t n = (uint32_t)[in readN:sizeof(header) bytes:(char *)&header];
+			if (n == sizeof(header))
+			{
+				if (header.magic == 0x4B59/*'YK'*/)
+				{
+					[in seek:header.size mode:SEEK_SET];
+				}
+				else
+				{
+					//[in seek:0 mode:SEEK_SET];
+					NSData *b2 = [[NSData alloc] initWithBytesNoCopy:&header length:sizeof(header) freeWhenDone:NO];
+					[out writeData:b2];
+				}
+			}
+			
+			while (1)
+			{
+				uint32_t n = (uint32_t)[in readN:bufsz bytes:buff];
+				if (n==0) break;
+				
+				NSData *b2 = [[NSData alloc] initWithBytesNoCopy:buff length:n freeWhenDone:NO];
+				[out writeData:b2];
+			}
+			free(buff);
+			[out closeFile];
+			result = YES;
+		}
+		[in closeFile];
+	}
+	return result;
+}
+
+@end
+
+
 @implementation YouKooHelper
 
 //
@@ -209,7 +262,11 @@
 }
 
 //
-- (NSString *)exportCaches:(NSIndexSet *)indexes outDir:(NSString *)outDir tmpDir:(NSString *)tmpDir progress:(void (^)(NSUInteger current, NSUInteger total))progress
+- (NSString *)exportCaches:(NSIndexSet *)indexes
+					outDir:(NSString *)outDir
+					tmpDir:(NSString *)tmpDir
+				  progress:(void (^)(NSUInteger current, NSUInteger total))progress
+				 progress2:(void (^)(NSUInteger current, NSUInteger total))progress2
 {
 	__block NSString *result = nil;
 	
@@ -219,7 +276,7 @@
 	
 	__block NSUInteger current = 0; NSUInteger total = indexes.count;
 	[indexes enumerateIndexesUsingBlock:^(NSUInteger index, BOOL *stop) {
-		NSString *ret = [self exportCache:_caches[index] afcDir:afcDir outDir:outDir tmpDir:tmpDir ffmpeg:ffmpeg fileManager:fileManager];
+		NSString *ret = [self exportCache:_caches[index] afcDir:afcDir outDir:outDir tmpDir:tmpDir ffmpeg:ffmpeg fileManager:fileManager progress2:progress2];
 		if (ret)
 		{
 			result = [NSString stringWithFormat:@"视频：%@\n\n%@", _caches[index][@"Subtitle"] ?: _caches[index][@"VideoId"], ret];
@@ -240,7 +297,12 @@
 				   tmpDir:(NSString *)tmpDir
 				   ffmpeg:(NSString *)ffmpeg
 			  fileManager:(NSFileManager *)fileManager
+				progress2:(void (^)(NSUInteger current, NSUInteger total))progress2
 {
+	NSUInteger current = 0;
+	NSUInteger total = [cache[@"SegmentsCount"] integerValue];
+	progress2(current, total);
+
 	if (_exportingCancelled)
 	{
 		return @"已取消";
@@ -300,6 +362,7 @@
 			{
 				return @"导出文件失败";
 			}
+			progress2(++current, total);
 		}
 	}
 	
@@ -362,55 +425,3 @@
 }
 @end
 
-
-@implementation AFCDirectoryAccess (Helper)
-
-//
-- (BOOL)copyYouKooFile:(NSString*)path1 toLocalFile:(NSString*)path2
-{
-	BOOL result = NO;
-	AFCFileReference *in = [self openForRead:path1];
-	if (in)
-	{
-		[NSFileManager.defaultManager createFileAtPath:path2 contents:nil attributes:nil];
-		NSFileHandle *out = [NSFileHandle fileHandleForWritingAtPath:path2];
-		if (out)
-		{
-			const long bufsz = 10240;
-			char *buff = malloc(bufsz);
-			
-			// Check YouKu header & skip it
-			struct {UInt16 magic; UInt16 size;} header;
-			uint32_t n = (uint32_t)[in readN:sizeof(header) bytes:(char *)&header];
-			if (n == sizeof(header))
-			{
-				if (header.magic == 0x4B59/*'YK'*/)
-				{
-					[in seek:header.size mode:SEEK_SET];
-				}
-				else
-				{
-					//[in seek:0 mode:SEEK_SET];
-					NSData *b2 = [[NSData alloc] initWithBytesNoCopy:&header length:sizeof(header) freeWhenDone:NO];
-					[out writeData:b2];
-				}
-			}
-			
-			while (1)
-			{
-				uint32_t n = (uint32_t)[in readN:bufsz bytes:buff];
-				if (n==0) break;
-				
-				NSData *b2 = [[NSData alloc] initWithBytesNoCopy:buff length:n freeWhenDone:NO];
-				[out writeData:b2];
-			}
-			free(buff);
-			[out closeFile];
-			result = YES;
-		}
-		[in closeFile];
-	}
-	return result;
-}
-
-@end

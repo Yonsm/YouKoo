@@ -4,7 +4,6 @@
 
 //
 @implementation AppDelegate
-@synthesize window;
 
 #pragma mark -
 #pragma mark Application delegate
@@ -12,7 +11,7 @@
 //
 - (void)applicationWillFinishLaunching:(NSNotification *)aNotification
 {
-	window.title = [NSString stringWithFormat:@"%@ - %@", NSBundleName(), NSBundleVersion()];
+	_window.title = [NSString stringWithFormat:@"%@ - %@", NSBundleName(), NSBundleVersion()];
 	
 	_tableView.target = self;
 	_tableView.doubleAction = @selector(doubleClick:);
@@ -145,6 +144,8 @@
 		self.state = StateExporting;
 		_progressIndicator.doubleValue = 0;
 		_progressIndicator.toolTip = nil;
+		_progressIndicator2.doubleValue = 0;
+		_progressIndicator2.toolTip = nil;
 		_youkoo.exportingCancelled = NO;
 
 		NSIndexSet *indexes = _tableView.selectedRowIndexes;
@@ -160,6 +161,11 @@
 				dispatch_sync(dispatch_get_main_queue(), ^{
 					_progressIndicator.doubleValue = current * 100 / total;
 					_progressIndicator.toolTip = [NSString stringWithFormat:@"%lu/%lu", current, total];
+				});
+			} progress2:^(NSUInteger current, NSUInteger total) {
+				dispatch_sync(dispatch_get_main_queue(), ^{
+					_progressIndicator2.doubleValue = current * 100 / total;
+					_progressIndicator2.toolTip = [NSString stringWithFormat:@"%lu/%lu", current, total];
 				});
 			}];
 			dispatch_sync(dispatch_get_main_queue(), ^{
@@ -223,6 +229,7 @@
 	
 	BOOL idle = (state == StateDisconnected) || (state == StateReady);
 	_progressIndicator.hidden = idle;
+	_progressIndicator2.hidden = (state != StateExporting);
 	_browseOutButton.enabled = idle;
 	_browseTmpButton.enabled = idle;
 	_exportButton.enabled = (state == StateReady) || (state == StateExporting);

@@ -304,8 +304,8 @@
                             <action selector="browseDir:" target="494" id="muo-sb-yme"/>
                         </connections>
                     </button>
-                    <progressIndicator hidden="YES" wantsLayer="YES" misplaced="YES" maxValue="100" displayedWhenStopped="NO" style="spinning" id="5Qg-tn-E1U">
-                        <rect key="frame" x="456" y="33" width="32" height="32"/>
+                    <progressIndicator hidden="YES" wantsLayer="YES" misplaced="YES" maxValue="100" displayedWhenStopped="NO" style="spinning" id="sJ8-vr-SPO">
+                        <rect key="frame" x="449" y="33" width="32" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                     </progressIndicator>
                     <button verticalHuggingPriority="750" misplaced="YES" id="3229">
@@ -319,6 +319,10 @@
                             <action selector="exportCaches:" target="494" id="3407"/>
                         </connections>
                     </button>
+                    <progressIndicator hidden="YES" wantsLayer="YES" misplaced="YES" maxValue="100" displayedWhenStopped="NO" style="bar" id="5Qg-tn-E1U">
+                        <rect key="frame" x="-1" y="83" width="655" height="20"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                    </progressIndicator>
                 </subviews>
             </view>
             <point key="canvasLocation" x="40.5" y="424.5"/>
@@ -330,6 +334,7 @@
                 <outlet property="_exportButton" destination="3229" id="3414"/>
                 <outlet property="_outField" destination="yRm-FJ-F3M" id="2Mp-so-Bql"/>
                 <outlet property="_progressIndicator" destination="5Qg-tn-E1U" id="Lrj-Dy-xgX"/>
+                <outlet property="_progressIndicator2" destination="sJ8-vr-SPO" id="XgS-S4-Jdp"/>
                 <outlet property="_tableView" destination="i9H-cp-QPX" id="PId-nW-tXH"/>
                 <outlet property="_tmpField" destination="B35-K4-HIB" id="QZA-ye-fUg"/>
                 <outlet property="window" destination="371" id="2789"/>
