@@ -14,7 +14,7 @@
 	_window.title = [NSString stringWithFormat:@"%@ - %@", NSBundleName(), NSBundleVersion()];
 	
 	_tableView.target = self;
-	_tableView.doubleAction = @selector(doubleClick:);
+	_tableView.doubleAction = @selector(tableCellDoubleClicked:);
 	
 	//
 	NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
@@ -32,9 +32,9 @@
 	_tmpField.stringValue = tmpDir;
 	
 	//
-	NSClickGestureRecognizer *outClick = [[NSClickGestureRecognizer alloc] initWithTarget:self action:@selector(dirFieldClicked:)];
+	NSClickGestureRecognizer *outClick = [[NSClickGestureRecognizer alloc] initWithTarget:self action:@selector(dirFieldDoubleClicked:)];
 	outClick.numberOfClicksRequired = 2;
-	NSClickGestureRecognizer *tmpClick = [[NSClickGestureRecognizer alloc] initWithTarget:self action:@selector(dirFieldClicked:)];
+	NSClickGestureRecognizer *tmpClick = [[NSClickGestureRecognizer alloc] initWithTarget:self action:@selector(dirFieldDoubleClicked:)];
 	tmpClick.numberOfClicksRequired = 2;
 	[_outField addGestureRecognizer:outClick];
 	[_tmpField addGestureRecognizer:tmpClick];
@@ -102,23 +102,23 @@
 	self.state = _state;
 }
 
-//
-- (void)doubleClick:(id)object
-{
-	[_youkoo showPage:_tableView.clickedRow];
-}
-
 #pragma mark -
 #pragma mark Control methods
 
 //
-- (void)dirFieldClicked:(NSClickGestureRecognizer *)sender
+- (void)tableCellDoubleClicked:(id)object
+{
+	[_youkoo showPage:_tableView.clickedRow];
+}
+
+//
+- (void)dirFieldDoubleClicked:(NSClickGestureRecognizer *)sender
 {
 	[[NSWorkspace sharedWorkspace] selectFile:nil inFileViewerRootedAtPath:[(NSTextField *)sender.view stringValue]];
 }
 
 //
-- (IBAction)browseDir:(id)sender
+- (IBAction)browseButtonClicked:(id)sender
 {
 	NSTextField *field = (sender == _browseOutButton) ? _outField : _tmpField;
 	
@@ -137,7 +137,7 @@
 }
 
 //
-- (IBAction)exportCaches:(id)sender
+- (IBAction)exportButtonClicked:(id)sender
 {
 	if (_state == StateReady)
 	{
@@ -179,7 +179,17 @@
 	}
 	else if (_state == StateExporting)
 	{
-		_youkoo.exportingCancelled = YES;
+		NSAlert *alert = [[NSAlert alloc] init];
+		alert.messageText = @"取消导出";
+		alert.informativeText = @"您想要取消导出吗?";
+		[alert addButtonWithTitle:@"取消导出"];
+		[alert addButtonWithTitle:@"继续导出"];
+		NSInteger i = [alert runModal];
+		if (i == NSAlertFirstButtonReturn)
+		{
+			_youkoo.exportingCancelled = YES;
+			_exportButton.enabled = NO;
+		}
 	}
 }
 
@@ -232,7 +242,7 @@
 	_progressIndicator2.hidden = (state != StateExporting);
 	_browseOutButton.enabled = idle;
 	_browseTmpButton.enabled = idle;
-	_exportButton.enabled = (state == StateReady) || (state == StateExporting);
+	_exportButton.enabled = (state == StateReady && _youkoo.caches.count) || (state == StateExporting);
 
 	switch (state)
 	{
@@ -248,8 +258,15 @@
 		}
 		case StateReady:
 		{
-			NSUInteger count = _tableView.selectedRowIndexes.count;
-			_exportButton.title = count ? [NSString stringWithFormat:@"📱导出 %lu 项", count] : @"📱导出全部";
+			if (_youkoo.caches.count)
+			{
+				NSUInteger count = _tableView.selectedRowIndexes.count;
+				_exportButton.title = count ? [NSString stringWithFormat:@"📱导出 %lu 项", count] : @"📱导出全部";
+			}
+			else
+			{
+				_exportButton.title = @"📱无缓存内容";
+			}
 			break;
 		}
 		case StateExporting:

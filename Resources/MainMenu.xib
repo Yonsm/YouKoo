@@ -163,7 +163,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <clipView key="contentView" id="ixH-LO-drd">
                             <rect key="frame" x="1" y="0.0" width="653" height="372"/>
-                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <autoresizingMask key="autoresizingMask"/>
                             <subviews>
                                 <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" autosaveColumns="NO" rowHeight="24" rowSizeStyle="medium" headerView="vnO-nS-oBs" id="i9H-cp-QPX">
                                     <rect key="frame" x="0.0" y="0.0" width="653" height="349"/>
@@ -272,7 +272,7 @@
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="browseDir:" target="494" id="Yy3-Ct-Mvz"/>
+                            <action selector="browseButtonClicked:" target="494" id="Yy3-Ct-Mvz"/>
                         </connections>
                     </button>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" id="a75-58-HTu">
@@ -301,7 +301,7 @@
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="browseDir:" target="494" id="muo-sb-yme"/>
+                            <action selector="browseButtonClicked:" target="494" id="muo-sb-yme"/>
                         </connections>
                     </button>
                     <progressIndicator hidden="YES" wantsLayer="YES" misplaced="YES" maxValue="100" displayedWhenStopped="NO" style="spinning" id="sJ8-vr-SPO">
@@ -316,7 +316,7 @@
                             <font key="font" metaFont="system" size="16"/>
                         </buttonCell>
                         <connections>
-                            <action selector="exportCaches:" target="494" id="3407"/>
+                            <action selector="exportButtonClicked:" target="494" id="3407"/>
                         </connections>
                     </button>
                     <progressIndicator hidden="YES" wantsLayer="YES" misplaced="YES" maxValue="100" displayedWhenStopped="NO" style="bar" id="5Qg-tn-E1U">

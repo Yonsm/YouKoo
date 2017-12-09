@@ -119,9 +119,8 @@
 	NSMutableDictionary *validMetas = [NSMutableDictionary dictionary];
 	
 	// Load caches
-	AFCApplicationDirectory *afcDir = [_device newAFCApplicationDirectory:@"net.yonsm.Armor"];
+	AFCApplicationDirectory *afcDir = [_device newAFCApplicationDirectory:@"net.yonsm.YouKoo.iPhone"];
 	NSArray *documents = [afcDir directoryContents:@"Documents"];
-	documents = [documents sortedArrayUsingSelector:@selector(compare:)];
 	_caches = [NSMutableArray arrayWithCapacity:documents.count];
 	
 	//
@@ -159,7 +158,7 @@
 	//
 	NSUInteger total = videos.count;
 	NSUInteger current = 0;
-	for (NSString *videoId in videos.allKeys)
+	for (NSString *videoId in [videos.allKeys sortedArrayUsingSelector:@selector(compare:)])
 	{
 		NSMutableDictionary *cache = [NSMutableDictionary dictionary];
 		cache[@"VideoId"] = videoId;
@@ -272,7 +271,7 @@
 	
 	NSString *ffmpeg = NSAssetSubPath(@"ffmpeg");
 	NSFileManager *fileManager = [NSFileManager defaultManager];
-	AFCApplicationDirectory *afcDir = [_device newAFCApplicationDirectory:@"net.yonsm.Armor"];
+	AFCApplicationDirectory *afcDir = [_device newAFCApplicationDirectory:@"net.yonsm.YouKoo.iPhone"];
 	
 	__block NSUInteger current = 0; NSUInteger total = indexes.count;
 	[indexes enumerateIndexesUsingBlock:^(NSUInteger index, BOOL *stop) {
@@ -322,7 +321,7 @@
 		int i2 = [obj2 intValue];
 		return (i1 == i2) ? NSOrderedSame : ((i1 < i2) ? NSOrderedAscending : NSOrderedDescending);
 	}];
-	
+
 	// Prepare local working directory
 	NSString *localDir = [tmpDir stringByAppendingPathComponent:cache[@"Subtitle"] ?: cache[@"VideoId"]];
 	if (![fileManager ensureDirectoryExists:localDir])
