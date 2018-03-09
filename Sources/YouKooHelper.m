@@ -14,6 +14,48 @@
 	}
 	return [self createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
 }
+
+//
+- (BOOL)copyYouKooFile:(NSString*)path1 toLocalFile:(NSString*)path2
+{
+	BOOL result = NO;
+	NSFileHandle *in = [NSFileHandle fileHandleForReadingAtPath:path1];
+	if (in)
+	{
+		[self createFileAtPath:path2 contents:nil attributes:nil];
+		NSFileHandle *out = [NSFileHandle fileHandleForWritingAtPath:path2];
+		if (out)
+		{
+			// Check YouKu header & skip it
+			struct {UInt16 magic; UInt16 size;} header;
+			NSData *b1 = [in readDataOfLength:sizeof(header)];
+			if (b1.length == sizeof(header))
+			{
+				[b1 getBytes:(void *)&header length:sizeof(header)];
+				if (header.magic == 0x4B59/*'YK'*/)
+				{
+					[in seekToFileOffset:header.size];
+				}
+				else
+				{
+					[out writeData:b1];
+				}
+			}
+			
+			while (1)
+			{
+				NSData *b2 = [in readDataOfLength:10240];
+				if (b2.length == 0) break;
+				[out writeData:b2];
+			}
+			[out closeFile];
+			result = YES;
+		}
+		[in closeFile];
+	}
+	return result;
+}
+
 @end
 
 
@@ -75,8 +117,8 @@
 				else
 				{
 					//[in seek:0 mode:SEEK_SET];
-					NSData *b2 = [[NSData alloc] initWithBytesNoCopy:&header length:sizeof(header) freeWhenDone:NO];
-					[out writeData:b2];
+					NSData *b1 = [[NSData alloc] initWithBytesNoCopy:&header length:sizeof(header) freeWhenDone:NO];
+					[out writeData:b1];
 				}
 			}
 			
@@ -99,7 +141,6 @@
 
 @end
 
-
 @implementation YouKooHelper
 
 //
@@ -113,6 +154,32 @@
 //
 - (void)loadCaches:(void (^)(NSUInteger current, NSUInteger total))progress
 {
+	_caches = [NSMutableArray array];
+
+	// Local YouKu Cache
+	NSString *dir = [NSUserDirectoryPath(NSLibraryDirectory) stringByAppendingString:@"/Containers/com.youku.mac/Data"];
+	NSArray *files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:dir error:nil];
+	for (NSString *file in files)
+	{
+		if ([file hasSuffix:@".kmx"])
+		{
+			NSMutableDictionary *cache = [NSMutableDictionary dictionary];
+			cache[@"SegmentsCount"] = @"1";
+			cache[@"Title"] = @"本机缓存";
+			cache[@"Subtitle"] = [file stringByReplacingOccurrencesOfString:@".kmx" withString:@""];
+			[_caches addObject:cache];
+		}
+	}
+	NSUInteger localCount = _caches.count;
+	if (localCount)
+	{
+		progress(localCount, localCount);
+	}
+	if (_device == nil)
+	{
+		return;
+	}
+
 	// Load meta info
 	NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
 	NSDictionary *metas = [preferences objectForKey:@"Metas"];
@@ -121,7 +188,6 @@
 	// Load caches
 	AFCApplicationDirectory *afcDir = [_device newAFCApplicationDirectory:@"net.yonsm.YouKoo.iPhone"];
 	NSArray *documents = [afcDir directoryContents:@"Documents"];
-	_caches = [NSMutableArray arrayWithCapacity:documents.count];
 	
 	//
 	NSMutableDictionary *videos = [NSMutableDictionary dictionaryWithCapacity:documents.count];
@@ -156,8 +222,8 @@
 	}
 	
 	//
-	NSUInteger total = videos.count;
-	NSUInteger current = 0;
+	NSUInteger total = localCount + videos.count;
+	NSUInteger current = localCount;
 	for (NSString *videoId in [videos.allKeys sortedArrayUsingSelector:@selector(compare:)])
 	{
 		NSMutableDictionary *cache = [NSMutableDictionary dictionary];
@@ -241,6 +307,7 @@
 	{
 		return NO;
 	}
+	subtitle = [subtitle stringByReplacingOccurrencesOfString:@"&quot;" withString:@"\""];
 	
 	NSString *title = nil;
 	end = [html rangeOfString:@"</span>：" options:NSBackwardsSearch range:NSMakeRange(0, location)];
@@ -252,6 +319,16 @@
 		{
 			NSInteger location = start.location + titleSpan.length;
 			title = [html substringWithRange:NSMakeRange(location, end.location - location)];
+			
+			//if ([title hasPrefix:@"<"])
+			{
+				NSInteger start = [title rangeOfString:@">"].location;
+				NSInteger end = [title rangeOfString:@"<" options:NSBackwardsSearch].location;
+				if (start != NSNotFound && end != NSNotFound)
+				{
+					title = [title substringWithRange:NSMakeRange(start + 1, end - start -1)];
+				}
+			}
 		}
 	}
 	
@@ -313,6 +390,22 @@
 	{
 		return nil;
 	}
+	
+	// Prepare output directory
+	if (![fileManager ensureDirectoryExists:outFile.stringByDeletingLastPathComponent])
+	{
+		return @"创建输出目录失败";
+	}
+
+	if (cache[@"VideoId"] == nil)
+	{
+		NSString *srcFile = [NSUserDirectoryPath(NSLibraryDirectory) stringByAppendingFormat:@"/Containers/com.youku.mac/Data/%@.kmx", cache[@"Subtitle"]];
+		if (![fileManager copyYouKooFile:srcFile toLocalFile:outFile])
+		{
+			return @"拷贝本机缓存失败";
+		}
+		return nil;
+	}
 
 	// Lookup remote video segments
 	NSString *remoteDir = [@"Documents" stringByAppendingPathComponent:cache[@"VideoId"]];
@@ -368,12 +461,6 @@
 	if (concats.length == 0)
 	{
 		return @"未找到视频片段";
-	}
-	
-	// Prepare output directory
-	if (![fileManager ensureDirectoryExists:outFile.stringByDeletingLastPathComponent])
-	{
-		return @"创建输出目录失败";
 	}
 	
 	// Create video list file

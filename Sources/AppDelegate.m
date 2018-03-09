@@ -38,9 +38,14 @@
 	tmpClick.numberOfClicksRequired = 2;
 	[_outField addGestureRecognizer:outClick];
 	[_tmpField addGestureRecognizer:tmpClick];
-
+	
 	//
 	MobileDeviceAccess.singleton.listener = self;
+
+	if (MobileDeviceAccess.singleton.devices.count == 0)
+	{
+		[self deviceConnected:nil];
+	}
 }
 
 //
