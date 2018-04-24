@@ -19,7 +19,7 @@
 	YouKooHelper *_youkoo;
 }
 
-typedef enum {StateDisconnected, StateLoading, StateReady, StateExporting} AppState;
+typedef enum {StateUninitialized, StateDisconnected, StateLoading, StateReady, StateExporting} AppState;
 
 @property (assign, nonatomic) AppState state;
 @property (assign) IBOutlet NSWindow *window;

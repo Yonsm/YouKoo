@@ -42,10 +42,12 @@
 	//
 	MobileDeviceAccess.singleton.listener = self;
 
-	if (MobileDeviceAccess.singleton.devices.count == 0)
-	{
-		[self deviceConnected:nil];
-	}
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		if (_state == StateUninitialized)
+		{
+			[self deviceConnected:nil];
+		}
+	});
 }
 
 //
@@ -204,7 +206,7 @@
 //
 - (void)deviceConnected:(AMDevice*)device
 {
-	if (_state == StateDisconnected)
+	if (_state <= StateDisconnected)
 	{
 		self.state = StateLoading;
 		_progressIndicator.doubleValue = 0;
@@ -242,7 +244,7 @@
 {
 	_state = state;
 	
-	BOOL idle = (state == StateDisconnected) || (state == StateReady);
+	BOOL idle = (state <= StateDisconnected) || (state == StateReady);
 	_progressIndicator.hidden = idle;
 	_progressIndicator2.hidden = (state != StateExporting);
 	_browseOutButton.enabled = idle;
