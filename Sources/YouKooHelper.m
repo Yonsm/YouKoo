@@ -157,7 +157,7 @@
 	_caches = [NSMutableArray array];
 
 	// Local YouKu Cache
-	NSString *dir = [NSUserDirectoryPath(NSLibraryDirectory) stringByAppendingString:@"/Containers/com.youku.mac/Data"];
+	NSString *dir = [NSUserDirectoryPath(NSLibraryDirectory) stringByAppendingString:@"/Containers/com.youku.mac/Data/VideoCache"];
 	NSArray *files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:dir error:nil];
 	for (NSString *file in files)
 	{
@@ -399,7 +399,7 @@
 
 	if (cache[@"VideoId"] == nil)
 	{
-		NSString *srcFile = [NSUserDirectoryPath(NSLibraryDirectory) stringByAppendingFormat:@"/Containers/com.youku.mac/Data/%@.kmx", cache[@"Subtitle"]];
+		NSString *srcFile = [NSUserDirectoryPath(NSLibraryDirectory) stringByAppendingFormat:@"/Containers/com.youku.mac/Data/VideoCache/%@.kmx", cache[@"Subtitle"]];
 		if (![fileManager copyYouKooFile:srcFile toLocalFile:outFile])
 		{
 			return @"拷贝本机缓存失败";
